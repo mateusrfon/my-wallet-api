@@ -18,12 +18,44 @@ const connection = new Pool({
 });
 
 //rota cadastro
-//const hashPassword = bcrypt.hashSync(password, 12); //2^12 hash encrypt
+app.post("/sign-up", async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        const userCheck = await connection.query(`SELECT * FROM users WHERE email = $1`, [email]);
+        if (userCheck.rows[0]) return res.sendStatus(401);
+        const hashPassword = bcrypt.hashSync(password, 12);
+        await connection.query(`
+            INSERT
+            INTO users (name, email, password)
+            VALUES ($1,$2,$3)
+            `, [name, email, hashPassword]);
+        res.sendStatus(201);
+    } catch(err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+})
 
 //rota login
-//bcrypt.compareSync(password, hashPassword) //comparison, returns bool
-//const token = uuid.v4(); //geração do token
-//INSERT INTO sessions ("userId", token) VALUES ($1, $2) //armazena o token gerado
+app.post("/sign-in", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const userQuery = await connection.query(`SELECT * FROM users WHERE email = $1`, [email]);
+        const user = userQuery.rows[0];
+        if (user && bcrypt.compareSync(password, user.password))  {
+            const token = uuidv4();
+            await connection.query(`
+                INSERT INTO sessions ("userId", token) VALUES ($1,$2)
+                `, [user.id, token]);
+            res.send({ name: user.name, token });
+        } else {
+            return res.sendStatus(401);
+        }
+    } catch(err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+})
 
 //rota get transactions
 //const authorization = req.headers['Authorization'];
@@ -38,7 +70,7 @@ app.listen(4000, () => {
 })
 
 /* mywallet
-users (id SERIAL, nome TEXT, email TEXT, password TEXT);
+users (id SERIAL, name TEXT, email TEXT, password TEXT -> Hash);
 transactions (id SERIAL, "userId" INTEGER, date DATE, value INTEGER, description TEXT);
 sessions (id SERIAL, "userId" INTEGER, token TEXT);
 */

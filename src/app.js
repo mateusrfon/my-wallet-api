@@ -58,12 +58,46 @@ app.post("/sign-in", async (req, res) => {
 })
 
 //rota get transactions
-//const authorization = req.headers['Authorization'];
-//const token = authorization.replace('Bearer ', '');
+app.get("/transactions", async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) return res.sendStatus(401);
+        const request = await connection.query(`
+            SELECT transactions.* FROM transactions
+            JOIN sessions ON sessions."userId" = transactions."userId"
+            WHERE sessions.token = $1
+            `, [token]);
+        const transactions = request.rows;
+        res.send(transactions);
+    } catch(err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+})
 
-//rota nova entrada
+//rota nova transaction
+app.post("/transactions", async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        const request = await connection.query(`
+            SELECT * FROM sessions
+            WHERE token = $1
+            `, [token]);
+        const session = request.rows[0];
+        if (!session) return res.sendStatus(401);
 
-//rota nova saída
+        const { userId, value, description } = req.body;
+        await connection.query(`
+            INSERT INTO transactions
+            ("userId", date, value, description)
+            VALUES ($1, NOW(), $2, $3)
+            `, [userId, value, description]);
+        res.sendStatus(201);
+    } catch(err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+});
 
 app.listen(4000, () => {
     console.log('Server started on port 4000.');

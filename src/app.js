@@ -78,15 +78,15 @@ app.get("/transactions", async (req, res) => {
 //rota nova transaction
 app.post("/transactions", async (req, res) => {
     try {
+        const { userId, value, description } = req.body;
         const token = req.headers.authorization?.replace('Bearer ', '');
         const request = await connection.query(`
             SELECT * FROM sessions
-            WHERE token = $1
-            `, [token]);
+            WHERE token = $1 AND "userId" = $2
+            `, [token, userId]);
         const session = request.rows[0];
         if (!session) return res.sendStatus(401);
 
-        const { userId, value, description } = req.body;
         await connection.query(`
             INSERT INTO transactions
             ("userId", date, value, description)

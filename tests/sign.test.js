@@ -5,6 +5,7 @@ import connection from '../src/database.js';
 
 beforeAll(async () => {
     await connection.query('DELETE FROM users');
+    await connection.query('DELETE FROM sessions');
 });
 
 afterAll(async () => {
@@ -30,6 +31,20 @@ describe("POST /sign-in", () => {
         const body = { email: "teste@teste.com", password: "teste" };
         const result = await supertest(app).post("/sign-in").send(body);
         expect(result.status).toEqual(200);
+    });
+    it("returns { name, token } for valid user/password", async () => {
+        const body = { email: "teste@teste.com", password: "teste" };
+        const result = await supertest(app).post("/sign-in").send(body);
+        const session = await connection.query(`
+            SELECT users.name AS name, sessions.token 
+            FROM sessions 
+            JOIN users ON users.id = sessions."userId"
+            WHERE users.email = $1
+        `, [body.email]);
+        const lastSession = session.rows[session.rows.length - 1];
+        const name = lastSession.name;
+        const token = lastSession.token;
+        expect(result.body).toEqual({ name, token });
     });
     it("returns status 401 for incorrect user", async () => {
         const body = { email: "tteste@teste.com", password: "teste" };

@@ -1,21 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import pg from 'pg';
+import connection from './database.js';
 import bcrypt from 'bcrypt'; //segurança de senha
 import { v4 as uuidv4 } from 'uuid'; //gerar token
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-
-const { Pool } = pg;
-const connection = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'mywallet',
-    password: '123456',
-    port: 5432
-});
 
 //rota cadastro
 app.post("/sign-up", async (req, res) => {
@@ -34,7 +25,7 @@ app.post("/sign-up", async (req, res) => {
         console.log(err);
         res.sendStatus(500);
     }
-})
+});
 
 //rota login
 app.post("/sign-in", async (req, res) => {
@@ -55,7 +46,7 @@ app.post("/sign-in", async (req, res) => {
         console.log(err);
         res.sendStatus(500);
     }
-})
+});
 
 //rota get transactions
 app.get("/transactions", async (req, res) => {
@@ -73,25 +64,26 @@ app.get("/transactions", async (req, res) => {
         console.log(err);
         res.sendStatus(500);
     }
-})
+});
 
 //rota nova transaction
 app.post("/transactions", async (req, res) => {
     try {
-        const { userId, value, description } = req.body;
+        const { value, description } = req.body;
         const token = req.headers.authorization?.replace('Bearer ', '');
         const request = await connection.query(`
             SELECT * FROM sessions
-            WHERE token = $1 AND "userId" = $2
-            `, [token, userId]);
+            WHERE token = $1
+            `, [token]);
         const session = request.rows[0];
+        
         if (!session) return res.sendStatus(401);
 
         await connection.query(`
             INSERT INTO transactions
             ("userId", date, value, description)
             VALUES ($1, NOW(), $2, $3)
-            `, [userId, value, description]);
+            `, [session.userId, value, description]);
         res.sendStatus(201);
     } catch(err) {
         console.log(err);
@@ -99,9 +91,12 @@ app.post("/transactions", async (req, res) => {
     }
 });
 
-app.listen(4000, () => {
-    console.log('Server started on port 4000.');
-})
+//TESTE DOS TESTES
+app.get("/teste", (req, res) => {
+    res.sendStatus(200);
+});
+
+export default app;
 
 /* mywallet
 users (id SERIAL, name TEXT, email TEXT, password TEXT -> Hash);

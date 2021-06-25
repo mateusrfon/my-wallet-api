@@ -1,19 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import connection from './database.js';
-import bcrypt from 'bcrypt'; //segurança de senha
-import { v4 as uuidv4 } from 'uuid'; //gerar token
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-//rota cadastro
 app.post("/sign-up", async (req, res) => {
     try {
         const { name, email, password } = req.body;
         const userCheck = await connection.query(`SELECT * FROM users WHERE email = $1`, [email]);
-        if (userCheck.rows[0]) return res.sendStatus(401);
+        if (userCheck.rows[0]) return res.sendStatus(409);
         const hashPassword = bcrypt.hashSync(password, 12);
         await connection.query(`
             INSERT
@@ -27,7 +26,6 @@ app.post("/sign-up", async (req, res) => {
     }
 });
 
-//rota login
 app.post("/sign-in", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -48,7 +46,6 @@ app.post("/sign-in", async (req, res) => {
     }
 });
 
-//rota get transactions
 app.get("/transactions", async (req, res) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
@@ -66,7 +63,6 @@ app.get("/transactions", async (req, res) => {
     }
 });
 
-//rota nova transaction
 app.post("/transactions", async (req, res) => {
     try {
         const { value, description } = req.body;
@@ -91,15 +87,4 @@ app.post("/transactions", async (req, res) => {
     }
 });
 
-//TESTE DOS TESTES
-app.get("/teste", (req, res) => {
-    res.sendStatus(200);
-});
-
 export default app;
-
-/* mywallet
-users (id SERIAL, name TEXT, email TEXT, password TEXT -> Hash);
-transactions (id SERIAL, "userId" INTEGER, date DATE, value INTEGER, description TEXT);
-sessions (id SERIAL, "userId" INTEGER, token TEXT);
-*/

@@ -63,7 +63,7 @@ app.get("/transactions", async (req, res) => {
     }
 });
 
-app.post("/transactions", async (req, res) => {
+app.post("/transaction", async (req, res) => {
     try {
         const { value, description } = req.body;
         const token = req.headers.authorization?.replace('Bearer ', '');

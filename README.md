@@ -24,7 +24,8 @@
 
 ## How to run
 
-Clone this repo and then in the project directory you can run:
+Clone this repo with 'git clone https://github.com/mateusrfon/my-wallet-api.git' on a terminal <br/>
+Go to the directory with 'cd my-wallet-api' and then you can run:
 
 ### `npm i`
 Installs all dependencies

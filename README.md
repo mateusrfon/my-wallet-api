@@ -44,4 +44,6 @@ Create the database
 #### psql mywallet;
 Connect to the database
 
-#### copy and paste the SQL from postgreSQL.txt
+#### copy and paste the SQL code from postgreSQL.txt
+
+Done

@@ -30,9 +30,20 @@ Go to the directory with 'cd my-wallet-api' and then you can run:
 ### `npm i`
 Installs all dependencies
 
-
 ### `npm run dev`
-
-Runs the server in the development mode.\
+Runs the server in the development mode.
 
 *(You should use the app from https://github.com/mateusrfon/my-wallet for a better view of the project)
+
+### Database
+Log into postgreSQL and run:
+
+#### CREATE DATABASE mywallet;
+Create the database
+
+#### psql mywallet;
+Connect to the database
+
+#### copy and paste the SQL code from postgreSQL.txt
+
+Done
